@@ -22,27 +22,24 @@ public class PreparationController {
 
     @ApiOperation(value = "Create a preparation")
     @PostMapping
-    public @ResponseBody
-    String addNewPreparation(@RequestBody PreparationDto preparationDto) {
-        preparationRepository.save(translator.translatePreparationDtoToPreparation(preparationDto));
-        return "Preparation saved";
+    public @ResponseBody PreparationDto addNewPreparation(@RequestBody PreparationDto preparationDto) {
+        return translator.translatePreparationToPreparationDto(preparationRepository.save(translator.translatePreparationDtoToPreparation(preparationDto)));
     }
 
     @ApiOperation(value = "Update the quantity of an preparation")
     @PutMapping(value = "/{id}/quantity")
-    public @ResponseBody String updatePreparation(@RequestBody int newQuantity, @PathVariable int id) {
+    public @ResponseBody PreparationDto updatePreparation(@RequestBody int newQuantity, @PathVariable int id) {
         return preparationRepository.findById(id)
                 .map(preparation -> {
                     preparation.setQuantity(newQuantity);
-                    return preparationRepository.save(preparation);
+                    return translator.translatePreparationToPreparationDto(preparationRepository.save(preparation));
                 })
-                .orElse(null) != null ? "Preparation updated" : "Preparation not found";
+                .orElse(null);
     }
 
     @ApiOperation(value = "Retrieve information about all preparations")
     @GetMapping
-    public @ResponseBody
-    List<PreparationDto> getAllPreparations() {
+    public @ResponseBody List<PreparationDto> getAllPreparations() {
         return StreamSupport.stream(preparationRepository.findAll().spliterator(), false).map(translator::translatePreparationToPreparationDto).collect(Collectors.toList());
     }
 

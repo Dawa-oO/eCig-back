@@ -31,7 +31,7 @@ public class AromeController {
 
     @ApiOperation(value = "Create an arome")
     @PostMapping
-    public @ResponseBody String addNewArome(@RequestParam("arome") String model, @RequestParam(value = "file", required = false) MultipartFile file) {
+    public @ResponseBody AromeDto addNewArome(@RequestParam("arome") String model, @RequestParam(value = "file", required = false) MultipartFile file) {
         // Transform JSON in String to GameDto
         ObjectMapper mapper = new ObjectMapper();
         AromeDto aromeDto = null;
@@ -40,7 +40,7 @@ public class AromeController {
             aromeDto = mapper.readValue(model, AromeDto.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            return "Error while parsing data to AromeDto";
+            return null;
         }
 
         Arome arome = aromeRepository.save(translator.translateAromeDtoToArome(aromeDto));
@@ -67,18 +67,19 @@ public class AromeController {
             e.printStackTrace();
         }
 
-        return "Arome and picture saved";
+        return translator.translateAromeToAromeDto(arome);
     }
 
     @ApiOperation(value = "Update the quantity of an arome")
     @PutMapping(value = "/{id}/quantity")
-    public @ResponseBody String updateArome(@RequestBody int newQuantity, @PathVariable int id) {
+    public @ResponseBody AromeDto updateArome(@RequestBody int newQuantity, @PathVariable int id) {
+        System.out.println("Updating arome [quantity: " + newQuantity + ", id: " + id + "]");
         return aromeRepository.findById(id)
                 .map(arome -> {
                     arome.setQuantity(newQuantity);
-                    return aromeRepository.save(arome);
+                    return translator.translateAromeToAromeDto(aromeRepository.save(arome));
                 })
-                .orElse(null) != null ? "Arome updated" : "Arome not found";
+                .orElse(null);
     }
 
     @ApiOperation(value = "Retrieve all aromes")

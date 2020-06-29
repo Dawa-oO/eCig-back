@@ -31,8 +31,7 @@ public class BoosterController {
 
     @ApiOperation(value = "Create a booster")
     @PostMapping
-    public @ResponseBody
-    String addNewBooster(@RequestParam("booster") String model, @RequestParam(value = "file", required = false) MultipartFile file) {
+    public @ResponseBody BoosterDto addNewBooster(@RequestParam("booster") String model, @RequestParam(value = "file", required = false) MultipartFile file) {
         // Transform JSON in String to GameDto
         ObjectMapper mapper = new ObjectMapper();
         BoosterDto boosterDto = null;
@@ -41,7 +40,7 @@ public class BoosterController {
             boosterDto = mapper.readValue(model, BoosterDto.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            return "Error while parsing data to BoosterDto";
+            return null;
         }
 
         Booster booster = boosterRepository.save(translator.translateBoosterDtoToBooster(boosterDto));
@@ -68,18 +67,19 @@ public class BoosterController {
             e.printStackTrace();
         }
 
-        return "Booster and picture saved";
+        return translator.translateBoosterToBoosterDto(booster);
     }
 
     @ApiOperation(value = "Update the quantity of a booster")
     @PutMapping(value = "/{id}/quantity")
-    public @ResponseBody String updateBooster(@RequestBody int newQuantity, @PathVariable int id) {
+    public @ResponseBody BoosterDto updateBooster(@RequestBody int newQuantity, @PathVariable int id) {
+        System.out.println("Updating booster [quantity: " + newQuantity + ", id: " + id + "]");
         return boosterRepository.findById(id)
                 .map(booster -> {
                     booster.setQuantity(newQuantity);
-                    return boosterRepository.save(booster);
+                    return translator.translateBoosterToBoosterDto(boosterRepository.save(booster));
                 })
-                .orElse(null) != null ? "Booster updated" : "Booster not found";
+                .orElse(null);
     }
 
     @ApiOperation(value = "Retrieve all boosters")
