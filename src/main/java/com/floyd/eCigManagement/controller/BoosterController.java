@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -65,6 +66,7 @@ public class BoosterController {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
 
         return translator.translateBoosterToBoosterDto(booster);
@@ -93,5 +95,24 @@ public class BoosterController {
     @GetMapping(value = "/{id}")
     public @ResponseBody BoosterDto getBoosterById(@PathVariable int id){
         return boosterRepository.findById(id).map(translator::translateBoosterToBoosterDto).orElse(null);
+    }
+
+    @ApiOperation(value="Delete a booster by its ID")
+    @DeleteMapping(value = "/{id}")
+    public @ResponseBody boolean deleteBoosterById(@PathVariable int id) {
+        // -- delete object in DB
+        boosterRepository.deleteById(id);
+
+        // -- delete file
+        File file = new File(env.getProperty("picture.path") + "images/booster/" + id + ".jpg");
+        try {
+            if (Files.deleteIfExists(file.toPath())) {
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }
