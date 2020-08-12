@@ -1,12 +1,17 @@
 package com.floyd.eCigManagement.controller;
 
 import com.floyd.eCigManagement.dto.PreparationDto;
+import com.floyd.eCigManagement.model.Arome;
+import com.floyd.eCigManagement.model.Preparation;
 import com.floyd.eCigManagement.repositories.PreparationRepository;
 import com.floyd.eCigManagement.translator.PreparationTranslator;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -47,5 +52,13 @@ public class PreparationController {
     @GetMapping(value = "/{id}")
     public @ResponseBody PreparationDto getPreparationById(@PathVariable int id) {
         return preparationRepository.findById(id).map(translator::translatePreparationToPreparationDto).orElse(null);
+    }
+
+    @ApiOperation(value="Delete a preparation by its ID")
+    @DeleteMapping(value = "/{id}")
+    public @ResponseBody boolean deletePreparationById(@PathVariable int id) {
+        // -- delete object in DB
+        preparationRepository.deleteById(id);
+        return true;
     }
 }
