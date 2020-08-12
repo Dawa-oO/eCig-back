@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.floyd.eCigManagement.dto.AromeDto;
 import com.floyd.eCigManagement.model.Arome;
 import com.floyd.eCigManagement.repositories.AromeRepository;
+import com.floyd.eCigManagement.repositories.PreparationRepository;
 import com.floyd.eCigManagement.translator.AromeTranslator;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -23,6 +25,8 @@ public class AromeController {
 
     @Autowired
     private AromeRepository aromeRepository;
+    @Autowired
+    private PreparationRepository preparationRepository;
 
     @Autowired
     private Environment env;
@@ -93,5 +97,31 @@ public class AromeController {
     @GetMapping(value = "/{id}")
     public @ResponseBody AromeDto getAromeById(@PathVariable int id){
         return aromeRepository.findById(id).map(translator::translateAromeToAromeDto).orElse(null);
+    }
+
+    @ApiOperation(value="Delete an arome by its ID")
+    @DeleteMapping(value = "/{id}")
+    public @ResponseBody boolean deleteAromeById(@PathVariable int id) {
+        Arome aromeToDelete = aromeRepository.findById(id).orElse(null);
+
+        if (aromeToDelete == null) {
+            return false;
+        }
+
+        // -- delete object in DB
+        preparationRepository.deleteByArome(aromeToDelete);
+        aromeRepository.deleteById(id);
+
+        // -- delete file
+        File file = new File(env.getProperty("picture.path") + "images/arome/" + id + ".jpg");
+        try {
+            if (Files.deleteIfExists(file.toPath())) {
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }
